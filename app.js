@@ -3,6 +3,7 @@ const form = document.querySelector('form');
 const groceryList = document.querySelector('ul.list-group');
 const nameInput = document.querySelector('#itemName');
 const quantityInput = document.querySelector('#itemQuantity');
+const clearButton = document.querySelector('#clearBtn');
 
 loadEvents();
 
@@ -11,6 +12,7 @@ function loadEvents(){
     document.addEventListener('DOMContentLoaded', getItems);
     form.addEventListener('submit', addItem);
     groceryList.addEventListener('click', removeItem);
+    clearButton.addEventListener('click', clearItems);
 }
 
 function getItems(){                                                                                            let items = [];
@@ -21,23 +23,30 @@ function getItems(){                                                            
         items = JSON.parse(localStorage.getItem('items'));
         items.forEach(element => {
             let li = document.createElement('li');
-            li.className = "alert alert-warning";
+            if(element['isDone'] === "Y"){
+                li.className = "alert alert-success";
+            }
+            else{
+                li.className = "alert alert-warning";
+            }
             li.style.listStyle = "none";
             li.appendChild(document.createTextNode(element.itemName + "  :  " + element.itemQuantity));
-            
+
             const deletebtn = document.createElement('button');
             deletebtn.className = "btn btn-sm btn-danger float-right ml-2";
             deletebtn.appendChild(document.createTextNode("Delete"));
             li.appendChild(deletebtn);
-            
-            const correctButton = document.createElement('button');
-            correctButton.className = "btn btn-sm btn-success float-right";
-            correctButton.appendChild(document.createTextNode("Done"));
-            li.appendChild(correctButton);
+
+            if(element['isDone'] === "N"){
+                const correctButton = document.createElement('button');
+                correctButton.className = "btn btn-sm btn-success float-right";
+                correctButton.appendChild(document.createTextNode("Done"));
+                li.appendChild(correctButton);
+            }
 
             groceryList.appendChild(li);
         });
-    } 
+    }
 }
 
 function addItem(e){
@@ -45,12 +54,12 @@ function addItem(e){
         alert("Please Enter values");
         return;
     }
-    
+
     const li = document.createElement('li');
     li.className = "alert alert-warning";
     li.style.listStyle = "none";
     li.appendChild(document.createTextNode(nameInput.value + "  :  " + quantityInput.value));
-    
+
     const deletebtn = document.createElement('button');
     deletebtn.className = "btn btn-sm btn-danger float-right ml-2";
     deletebtn.appendChild(document.createTextNode("Delete"));
@@ -60,9 +69,9 @@ function addItem(e){
     correctButton.className = "btn btn-sm btn-success float-right";
     correctButton.appendChild(document.createTextNode("Done"));
     li.appendChild(correctButton);
-    
+
     storeLocally(nameInput.value, quantityInput.value);
-    
+
     nameInput.value = "";
     quantityInput.value = "";
     groceryList.appendChild(li);
@@ -79,7 +88,7 @@ function storeLocally(item, quantity){
     else{
         items = JSON.parse(localStorage.getItem('items'));
     }
-    items.push({"itemName": item, "itemQuantity": quantity});
+    items.push({"itemName": item, "itemQuantity": quantity, "isDone": "N"});
     localStorage.setItem('items', JSON.stringify(items));
 }
 
@@ -87,6 +96,16 @@ function storeLocally(item, quantity){
 function removeItem(e){
     if(e.target.classList.contains("btn-success")){
         e.target.parentElement.className = "alert alert-success";
+        let content = e.target.parentElement.textContent;
+        content = content.split(":");
+        content[0] = content[0].trim();
+        let items = JSON.parse(localStorage.getItem('items'));
+        items.forEach(element => {
+            if(content[0] === element['itemName']){
+                element['isDone'] = "Y";
+            }
+        });
+        localStorage.setItem('items', JSON.stringify(items));
         e.target.style.display = "none";
     }
     else if(e.target.classList.contains("btn-danger")){
@@ -97,7 +116,6 @@ function removeItem(e){
 }
 
 function removeFromLocal(item){
-    console.log(item.textContent);
     let content = item.textContent;
     content = content.split(":");
     content[0] = content[0].trim();
@@ -117,4 +135,13 @@ function removeFromLocal(item){
 
     localStorage.setItem('items', JSON.stringify(items));
 }
+
+function clearItems(){
+    items = JSON.parse(localStorage.getItem('items'));
+    items = [];
+    groceryList.innerHTML = "";
+    localStorage.setItem('items', JSON.stringify(items));
+    getItems();
+}
+
 
